@@ -18,7 +18,7 @@ spec:
     - name: resultRegistryURL
       description: Registry URL where the result image will be pushed
       type: string
-      default: quay.io/chilanti/windows11-qe-virtio-autounattend:latest
+      default: quay.io/chilanti/windows2025-virtio-autounattend:latest
     - description: Name of the source PVC.
       name: sourceDVName
       type: string
@@ -55,7 +55,7 @@ spec:
       description: Name of the base DataVolume which is created. Pre-installed Windows VMs can be created from this DataVolume.
       name: baseDvName
       type: string
-    - default: windows-source
+    - default: windows-source-2025
       description: Name of Windows ISO datavolume
       name: isoDVName
       type: string
