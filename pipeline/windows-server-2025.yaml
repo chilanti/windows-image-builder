@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: windows-autounattend
+  name: windows-2025-autounattend-pipeline
 spec:
   workspaces:
     - name: output
@@ -22,11 +22,11 @@ spec:
     - description: Name of the source PVC.
       name: sourceDVName
       type: string
-      default: windows-source
+      default: windows-source-2025
     - name: autounattendXMLConfigMapFileName
       description: File name where is stored the autounattend XML ConfigMap under configmaps/autounattend path. 
       type: string
-      default: windows11-qe-virtio.yaml
+      default: windows2k25-noobe.yaml
     - name: instanceTypeName
       type: string
       description: Name of VirtualMachineClusterInstancetype object
@@ -38,12 +38,12 @@ spec:
     - name: preferenceName
       type: string
       description: Name of VirtualMachineClusterPreference object
-      default: windows.11.virtio
+      default: windows.2k2025.virtio
     - name: virtualMachinePreferenceKind
       type: string
       description: Kind of virtualMachinePreference object
       default: VirtualMachineClusterPreference
-    - default: windows11-qe-virtio-autounattend
+    - default: windows2k25-nooobe-autounattend
       description: Name of the ConfigMap containing the sysprep configuration files (autounattend.xml, etc.). For example windows11-autounattend, windows10-efi-autounattend or windows2022-autounattend. It is possible to provide customize ConfigMaps created by the user too.
       name: autounattendConfigMapName
       type: string
@@ -51,7 +51,7 @@ spec:
       description: Reference to the containerdisk containing the virtio-win drivers ISO.
       name: virtioContainerDiskName
       type: string
-    - default: windows11-qe-virtio-dv
+    - default: windows2025-virtio-dv
       description: Name of the base DataVolume which is created. Pre-installed Windows VMs can be created from this DataVolume.
       name: baseDvName
       type: string

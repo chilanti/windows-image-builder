@@ -200,7 +200,7 @@ data:
   trigger-wsl.ps1: |
     Start-Job -ScriptBlock {
       Write-Output "Starting installation of Ubuntu. Waiting..."
-      wsl --install -d ubuntu
+      wsl --install --web-download -d Ubuntu
     }
 
     #wait until the ubuntu VM is available
