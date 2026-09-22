@@ -133,13 +133,33 @@ data:
     </unattend>
   post-install.ps1: |
     # Install Python for all users and add it to the machine PATH
-    $pythonInstaller = "C:\\python-installer.exe"
-    Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.13.0/python-3.13.0-amd64.exe" -OutFile $pythonInstaller
-    $pythonInstall = Start-Process $pythonInstaller -Wait -PassThru -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0"
-    Remove-Item $pythonInstaller -Force
-    if ($pythonInstall.ExitCode -ne 0) {
-      throw "Python installation failed with exit code $($pythonInstall.ExitCode)"
+    $pythonVersion = "3.13.5"  # use latest stable
+    $pythonInstaller = "C:\python-installer.exe"
+    $pythonUrl = "https://www.python.org/ftp/python/$pythonVersion/python-$pythonVersion-amd64.exe"
+
+    Write-Host "Downloading Python $pythonVersion..."
+    try {
+        $ProgressPreference = 'SilentlyContinue'  # massively speeds up Invoke-WebRequest
+        Invoke-WebRequest -Uri $pythonUrl -OutFile $pythonInstaller -TimeoutSec 120 -ErrorAction Stop
+    } catch {
+        throw "Failed to download Python installer: $_"
     }
+
+    if (-not (Test-Path $pythonInstaller)) {
+        throw "Python installer not found after download"
+    }
+
+    Write-Host "Installing Python..."
+    $pythonInstall = Start-Process $pythonInstaller -Wait -PassThru -ArgumentList `
+        "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0 TargetDir=C:\Python313"
+
+    Remove-Item $pythonInstaller -Force -ErrorAction SilentlyContinue
+
+    if ($pythonInstall.ExitCode -ne 0) {
+        throw "Python installation failed with exit code $($pythonInstall.ExitCode)"
+    }
+
+    Write-Host "Python installed successfully"
 
     # Install and enable OpenSSH Server
     Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
