@@ -18,7 +18,7 @@ spec:
     - name: resultRegistryURL
       description: Registry URL where the result image will be pushed
       type: string
-      default: quay.io/chilanti/windows2025-virtio-autounattend:latest
+      default: docker-na-public.artifactory.swg-devops.com/hyc-abell-devops-team-dev-docker-local/windows2025-virtio-autounattend:latest
     - description: Name of the source PVC.
       name: sourceDVName
       type: string
@@ -38,7 +38,7 @@ spec:
     - name: preferenceName
       type: string
       description: Name of VirtualMachineClusterPreference object
-      default: windows.2k2025.virtio
+      default: windows.2k25.virtio
     - name: virtualMachinePreferenceKind
       type: string
       description: Kind of virtualMachinePreference object
@@ -152,9 +152,9 @@ spec:
                 volumeMode: Filesystem
                 resources:
                   requests:
-                    storage: 9Gi
+                    storage: 10Gi
         - name: waitForSuccess
-          value: false
+          value: true
         - name: allowReplace
           value: true
         - name: setOwnerReference
