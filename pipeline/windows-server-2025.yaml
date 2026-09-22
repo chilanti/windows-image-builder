@@ -18,7 +18,7 @@ spec:
     - name: resultRegistryURL
       description: Registry URL where the result image will be pushed
       type: string
-      default: docker-na-public.artifactory.swg-devops.com/hyc-abell-devops-team-dev-docker-local/windows2025-virtio-autounattend:latest
+      default: docker-na-public.artifactory.swg-devops.com/hyc-abell-devops-team-dev-docker-local/windows2025-virtio-fusion-perf:latest
     - description: Name of the source PVC.
       name: sourceDVName
       type: string
