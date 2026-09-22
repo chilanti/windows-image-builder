@@ -152,7 +152,7 @@ spec:
                 volumeMode: Filesystem
                 resources:
                   requests:
-                    storage: 10Gi
+                    storage: 50Gi
         - name: waitForSuccess
           value: true
         - name: allowReplace
@@ -219,7 +219,7 @@ spec:
               storage:
                 resources:
                   requests:
-                    storage: 30Gi
+                    storage: 60Gi
               source:
                 blank: {}
         - name: waitForSuccess
@@ -353,7 +353,7 @@ spec:
               storage:
                 resources:
                   requests:
-                    storage: 30Gi
+                    storage: 60Gi
               source:
                 pvc:
                   name: $(tasks.create-vm-root-disk.results.name)
