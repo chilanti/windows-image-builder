@@ -132,6 +132,13 @@ data:
       </settings>
     </unattend>
   post-install.ps1: |
+    Function Download-File($uri, $outFile) {
+    Write-Host "Downloading the file from $uri to $outFile"
+    $ProgressPreference = "SilentlyContinue"
+    Invoke-WebRequest -Uri $uri -OutFile $outFile
+    $ProgressPreference = "Continue"
+    Write-Host "File downloaded"
+    }
     Start-Transcript -Path "C:\init-transcript.log" -Append
     Set-SConfig -AutoLaunch $false
 
@@ -169,6 +176,7 @@ data:
       if ($process.exitcode -ne 0) {
         throw "Package installation in WSL failed with exit code $($process.exitcode)"
       }
+    }
     catch {
       Write-Host "Failed to install packages in WSL: $_"
     }
