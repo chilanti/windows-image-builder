@@ -153,7 +153,7 @@ data:
     try {
       Download-File "https://github.com/microsoft/WSL/releases/download/2.3.26/wsl.2.3.26.0.x64.msi" "C:\wsl.msi"
       Start-Process msiexec -Wait -ArgumentList "/i C:\wsl.msi /qn /passive /norestart"
-      wsl --install -d ubuntu
+      wsl --install --web-download -d Ubuntu
       Write-Host "WSL installed successfully"
       Remove-Item "C:\wsl.msi"
       } catch {
