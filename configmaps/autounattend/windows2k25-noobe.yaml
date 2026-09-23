@@ -132,7 +132,7 @@ data:
       </settings>
     </unattend>
   post-install.ps1: |
-
+    Start-Transcript -Path "C:\init-transcript.log" -Append
     Set-SConfig -AutoLaunch $false
 
     # Install virtio guest drivers
@@ -141,7 +141,7 @@ data:
     # Install qemu guest agent
     Start-Process msiexec -Wait -ArgumentList "/i E:\guest-agent\qemu-ga-x86_64.msi /qn /passive /norestart"
     # # Install Python for all users and add it to the machine PATH
-    # Start-Transcript -Path "C:\init-transcript.log" -Append
+    # 
     # # Wait for a valid DNS server to be assigned (up to 3 minutes)
     # Write-Host "Waiting for network/DNS to become available..."
     # $maxWait = 180  # seconds
