@@ -151,29 +151,29 @@ data:
 
       # Install virtio guest drivers
       $process = Start-Process msiexec -Wait -PassThru -ArgumentList "/i E:\virtio-win-gt-x64.msi /qn /passive /norestart"
-      if ($process.ExitCode -ne 0) {
+      if ($process.ExitCode -notin @(0, 3010)) {
         throw "Virtio driver installation failed with exit code $($process.ExitCode)"
       }
 
       # Install qemu guest agent
       $process = Start-Process msiexec -Wait -PassThru -ArgumentList "/i E:\guest-agent\qemu-ga-x86_64.msi /qn /passive /norestart"
-      if ($process.ExitCode -ne 0) {
+      if ($process.ExitCode -notin @(0, 3010)) {
         throw "QEMU guest agent installation failed with exit code $($process.ExitCode)"
       }
 
       Download-File "https://github.com/microsoft/WSL/releases/download/2.3.26/wsl.2.3.26.0.x64.msi" "C:\wsl.msi"
       $process = Start-Process msiexec -Wait -PassThru -ArgumentList "/i C:\wsl.msi /qn /passive /norestart"
-      if ($process.ExitCode -ne 0) {
+      if ($process.ExitCode -notin @(0, 3010)) {
         throw "WSL MSI installation failed with exit code $($process.ExitCode)"
       }
       Remove-Item "C:\wsl.msi"
 
       dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
-      if ($LASTEXITCODE -ne 0) {
+      if ($LASTEXITCODE -notin @(0, 3010)) {
         throw "Enabling Microsoft-Windows-Subsystem-Linux failed with exit code $LASTEXITCODE"
       }
       dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
-      if ($LASTEXITCODE -ne 0) {
+      if ($LASTEXITCODE -notin @(0, 3010)) {
         throw "Enabling VirtualMachinePlatform failed with exit code $LASTEXITCODE"
       }
 
