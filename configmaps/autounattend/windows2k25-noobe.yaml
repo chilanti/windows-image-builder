@@ -132,6 +132,14 @@ data:
       </settings>
     </unattend>
   post-install.ps1: |
+
+    Set-SConfig -AutoLaunch $false
+
+    # Install virtio guest drivers
+    Start-Process msiexec -Wait -ArgumentList "/i E:\virtio-win-gt-x64.msi /qn /passive /norestart"
+
+    # Install qemu guest agent
+    Start-Process msiexec -Wait -ArgumentList "/i E:\guest-agent\qemu-ga-x86_64.msi /qn /passive /norestart"
     # Install Python for all users and add it to the machine PATH
     Start-Transcript -Path "C:\init-transcript.log" -Append
     # Wait for a valid DNS server to be assigned (up to 3 minutes)
@@ -198,13 +206,5 @@ data:
       New-NetFirewallRule -Name sshd -DisplayName OpenSSH-Server-In-TCP `
         -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
     }
-    Set-SConfig -AutoLaunch $false
-
-    # Install virtio guest drivers
-    Start-Process msiexec -Wait -ArgumentList "/i E:\virtio-win-gt-x64.msi /qn /passive /norestart"
-
-    # Install qemu guest agent
-    Start-Process msiexec -Wait -ArgumentList "/i E:\guest-agent\qemu-ga-x86_64.msi /qn /passive /norestart"
-
     # Shut down the machine
     Stop-Computer -Force
