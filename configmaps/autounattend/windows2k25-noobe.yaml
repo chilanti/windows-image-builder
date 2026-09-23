@@ -132,42 +132,88 @@ data:
       </settings>
     </unattend>
   post-install.ps1: |
+    param(
+      [switch]$Resume
+    )
+
     Function Download-File($uri, $outFile) {
-    Write-Host "Downloading the file from $uri to $outFile"
-    $ProgressPreference = "SilentlyContinue"
-    Invoke-WebRequest -Uri $uri -OutFile $outFile
-    $ProgressPreference = "Continue"
-    Write-Host "File downloaded"
+      Write-Host "Downloading the file from $uri to $outFile"
+      $ProgressPreference = "SilentlyContinue"
+      Invoke-WebRequest -Uri $uri -OutFile $outFile
+      $ProgressPreference = "Continue"
+      Write-Host "File downloaded"
     }
+
     Start-Transcript -Path "C:\init-transcript.log" -Append
-    Set-SConfig -AutoLaunch $false
 
-    # Install virtio guest drivers
-    Start-Process msiexec -Wait -ArgumentList "/i E:\virtio-win-gt-x64.msi /qn /passive /norestart"
+    if (-not $Resume) {
+      Set-SConfig -AutoLaunch $false
 
-    # Install qemu guest agent
-    Start-Process msiexec -Wait -ArgumentList "/i E:\guest-agent\qemu-ga-x86_64.msi /qn /passive /norestart"
+      # Install virtio guest drivers
+      $process = Start-Process msiexec -Wait -PassThru -ArgumentList "/i E:\virtio-win-gt-x64.msi /qn /passive /norestart"
+      if ($process.ExitCode -ne 0) {
+        throw "Virtio driver installation failed with exit code $($process.ExitCode)"
+      }
 
-    #install wsl
-    Write-Host "Installing WSL..."
-    try {
+      # Install qemu guest agent
+      $process = Start-Process msiexec -Wait -PassThru -ArgumentList "/i E:\guest-agent\qemu-ga-x86_64.msi /qn /passive /norestart"
+      if ($process.ExitCode -ne 0) {
+        throw "QEMU guest agent installation failed with exit code $($process.ExitCode)"
+      }
+
       Download-File "https://github.com/microsoft/WSL/releases/download/2.3.26/wsl.2.3.26.0.x64.msi" "C:\wsl.msi"
-      Start-Process msiexec -Wait -ArgumentList "/i C:\wsl.msi /qn /passive /norestart"
-      wsl --install --web-download -d Ubuntu
-      Write-Host "WSL installed successfully"
+      $process = Start-Process msiexec -Wait -PassThru -ArgumentList "/i C:\wsl.msi /qn /passive /norestart"
+      if ($process.ExitCode -ne 0) {
+        throw "WSL MSI installation failed with exit code $($process.ExitCode)"
+      }
       Remove-Item "C:\wsl.msi"
-      } catch {
-      Write-Host "Failed to install WSL: $_"
+
+      dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+      if ($LASTEXITCODE -ne 0) {
+        throw "Enabling Microsoft-Windows-Subsystem-Linux failed with exit code $LASTEXITCODE"
+      }
+      dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+      if ($LASTEXITCODE -ne 0) {
+        throw "Enabling VirtualMachinePlatform failed with exit code $LASTEXITCODE"
+      }
+
+      Copy-Item "F:\post-install.ps1" "C:\post-install.ps1" -Force
+      $action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\post-install.ps1 -Resume"
+      $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+      $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
+      Register-ScheduledTask -TaskName "ContinueWindowsPostInstall" -Action $action -Trigger $trigger -Principal $principal -Force
+
+      Write-Host "WSL features enabled. Rebooting before Ubuntu installation."
+      Restart-Computer -Force
+      return
     }
+
+    Unregister-ScheduledTask -TaskName "ContinueWindowsPostInstall" -Confirm:$false -ErrorAction SilentlyContinue
+
+    # Install Ubuntu after the WSL feature reboot.
+    Write-Host "Installing Ubuntu..."
+    wsl --install --web-download --no-launch -d Ubuntu
+    if ($LASTEXITCODE -ne 0) {
+      throw "Ubuntu installation failed with exit code 0x{0:X8}" -f $LASTEXITCODE
+    }
+
     #wait until the ubuntu VM is available
-    $ubuntuAvailable=-1
-    while ($ubuntuAvailable -eq -1) {
+    $ubuntuAvailable = $false
+    for ($attempt = 1; $attempt -le 30; $attempt++) {
       Write-Host "Ubuntu not available. Waiting..."
-      $process = Start-Process -FilePath "wsl" -ArgumentList "-u root apt-get update" -Passthru
-      Wait-Process $process.id
-      $ubuntuAvailable=$process.exitcode
+      $process = Start-Process -FilePath "wsl.exe" -ArgumentList "-d Ubuntu -u root -- apt-get update" -Wait -PassThru -NoNewWindow
+      if ($process.ExitCode -eq 0) {
+        $ubuntuAvailable = $true
+        break
+      }
       Start-Sleep -Seconds 10
-    }    
+    }
+    if (-not $ubuntuAvailable) {
+      wsl --status
+      wsl --list --verbose
+      throw "Ubuntu did not become ready"
+    }
+
     # Install packages in WSL
     Write-Host "Installing packages in WSL..."
     try {
