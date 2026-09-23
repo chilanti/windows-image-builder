@@ -204,6 +204,11 @@ data:
     }
     Remove-Item $ubuntuRootfs -Force
 
+    wsl.exe -d Ubuntu -u root -- sed -i 's|http://|https://|g' /etc/apt/sources.list.d/ubuntu.sources
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to update Ubuntu sources to HTTPS with exit code $LASTEXITCODE"
+    }
+
     #wait until the ubuntu VM is available
     $ubuntuAvailable = $false
     for ($attempt = 1; $attempt -le 30; $attempt++) {
@@ -224,7 +229,11 @@ data:
     # Install packages in WSL
     Write-Host "Installing packages in WSL..."
     try {
-      $process = Start-Process -FilePath "wsl.exe" -ArgumentList "-d Ubuntu -u root -- apt-get install -y netcat-openbsd wget fio ioping sysstat ethtool bc tmux vim iputils-ping bwm-ng net-tools procps openssh-server jq curl iperf3" -Wait -PassThru -NoNewWindow
+      wsl.exe -d Ubuntu -u root -- bash -lc 'apt-get update'
+      if ($LASTEXITCODE -ne 0) {
+        throw "WSL apt repository update failed with exit code $LASTEXITCODE"
+      }
+      $process = Start-Process -FilePath "wsl.exe" -ArgumentList "-d Ubuntu -u root -- apt-get install -y netcat-openbsd wget fio ioping sysstat ethtool bc tmux vim iputils-ping bwm-ng net-tools procps openssh-server jq curl" -Wait -PassThru -NoNewWindow
       if ($process.ExitCode -ne 0) {
         throw "Package installation in WSL failed with exit code $($process.exitcode)"
       }
