@@ -190,12 +190,19 @@ data:
 
     Unregister-ScheduledTask -TaskName "ContinueWindowsPostInstall" -Confirm:$false -ErrorAction SilentlyContinue
 
-    # Install Ubuntu after the WSL feature reboot.
+    # Import Ubuntu after the WSL feature reboot. Direct import avoids the
+    # Store-style distro registration path used by wsl --install.
     Write-Host "Installing Ubuntu..."
-    wsl --install --web-download --no-launch -d Ubuntu
+    $ubuntuRootfs = "C:\noble-wsl-amd64.wsl"
+    $ubuntuInstallPath = "C:\WSL\Ubuntu"
+    Download-File "https://cdimages.ubuntu.com/ubuntu-wsl/noble/daily-live/current/noble-wsl-amd64.wsl" $ubuntuRootfs
+    New-Item -ItemType Directory -Path $ubuntuInstallPath -Force | Out-Null
+    wsl.exe --set-default-version 2
+    wsl.exe --import Ubuntu $ubuntuInstallPath $ubuntuRootfs --version 2
     if ($LASTEXITCODE -ne 0) {
-      throw "Ubuntu installation failed with exit code 0x{0:X8}" -f $LASTEXITCODE
+      throw "Ubuntu import failed with exit code 0x{0:X8}" -f $LASTEXITCODE
     }
+    Remove-Item $ubuntuRootfs -Force
 
     #wait until the ubuntu VM is available
     $ubuntuAvailable = $false
