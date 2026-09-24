@@ -194,10 +194,7 @@ data:
 
     $startupDir = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp"
     $startupCmd = Join-Path $startupDir "fio-server.cmd"
-    $startupScript = @"
-@echo off
-start /b "" "C:\Program Files (x86)\fio\fio.exe" --server
-"@
+    $startupScript = "@echo off`r`nstart /b "" ""C:\Program Files (x86)\fio\fio.exe"" --server`r`n"
     New-Item -ItemType Directory -Path $startupDir -Force | Out-Null
     Set-Content -Path $startupCmd -Value $startupScript -Encoding ASCII
 
