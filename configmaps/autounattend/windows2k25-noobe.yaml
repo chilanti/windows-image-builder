@@ -192,14 +192,19 @@ data:
     }
     $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
 
-    $taskName = "fio-server"
-    Unregister-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-    $action = New-ScheduledTaskAction -Execute $fioExe -Argument "--server"
-    $trigger = New-ScheduledTaskTrigger -AtStartup
-    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -StartWhenAvailable
-    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
-    Start-ScheduledTask -TaskName $taskName
-    Write-Host "fio server scheduled task created and started successfully"
+    $serviceName = "fio-server"
+    $serviceBin = "\"$fioExe\" --server"
+    & sc.exe stop $serviceName 2>$null
+    & sc.exe delete $serviceName 2>$null
+    & sc.exe create $serviceName binPath= $serviceBin start= auto obj= LocalSystem 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to create fio Windows service"
+    }
+    & sc.exe start $serviceName 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to start fio Windows service"
+    }
+    Write-Host "fio Windows service created and started successfully"
     Write-Host "Post-installation script completed successfully"
     # Shut down the machine
     Stop-Computer -Force
