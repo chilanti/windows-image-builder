@@ -196,7 +196,7 @@ data:
     Unregister-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
     $action = New-ScheduledTaskAction -Execute $fioExe -Argument "--server"
     $trigger = New-ScheduledTaskTrigger -AtStartup
-    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingToSleep -StartWhenAvailable
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -StartWhenAvailable
     Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
     Start-ScheduledTask -TaskName $taskName
     Write-Host "fio server scheduled task created and started successfully"
