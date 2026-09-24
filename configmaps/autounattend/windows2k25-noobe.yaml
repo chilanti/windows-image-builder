@@ -176,17 +176,25 @@ data:
 
     # Ensure fio runs as a background server on every startup and immediately on this boot.
     Write-Host "Setting up fio to run as a background server on every startup"
-    $fioExe = Get-ChildItem "$env:ProgramFiles" -Recurse -Filter fio.exe |
-      Where-Object { $_.FullName -match 'fio\.exe$' } |
-      Select-Object -First 1
-    if (-not $fioExe) {
-      Write-Host "fio.exe was not found after installation"
-      throw "fio.exe was not found after installation"
+    $fioDir = "C:\Program Files (x86)\fio"
+    $fioExe = Join-Path $fioDir "fio.exe"
+    if (-not (Test-Path $fioExe)) {
+      Write-Host "fio.exe was not found at $fioExe"
+      throw "fio.exe was not found at $fioExe"
     }
+
+    $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+    $pathEntries = @()
+    if ($machinePath) { $pathEntries = $machinePath -split ';' | Where-Object { $_ } }
+    if ($pathEntries -notcontains $fioDir) {
+      $updatedMachinePath = if ($machinePath) { $machinePath.TrimEnd(';') + ';' + $fioDir } else { $fioDir }
+      [Environment]::SetEnvironmentVariable('Path', $updatedMachinePath, 'Machine')
+    }
+    $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
 
     $taskName = "fio-server"
     Unregister-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-    $action = New-ScheduledTaskAction -Execute $fioExe.FullName -Argument "--server"
+    $action = New-ScheduledTaskAction -Execute $fioExe -Argument "--server"
     $trigger = New-ScheduledTaskTrigger -AtStartup
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingToSleep -StartWhenAvailable
     Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
