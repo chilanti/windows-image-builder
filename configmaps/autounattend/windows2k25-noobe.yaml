@@ -203,6 +203,14 @@ data:
       throw "Failed to start fio in the current session"
     }
     Write-Host "fio startup wrapper created and fio process started successfully"
+    # Create administrators_authorized_keys
+    Write-Host "Creating administrators_authorized_keys file"
+    $KeyPath = "$env:ProgramData\ssh\administrators_authorized_keys"
+    Set-Content -Path $KeyPath -Value "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC01AwnbNi8AY0lDtVMcr1pccBSm9B9aAdzA1LamOyOs1qR/rtHiCiBpxhb1CA9MkyulZtaMQlYIZoQXmwSRPlGLSJLKLgshp96IH+v59kvjmMgYuZBLWEtb9QiV7BLSu4Wx1ABSfQE2r5164W1uviLnVajE/vPokYMaySn3WwXS03KNdKCZvlP0LoUy0uTLac2Vt4gfku6IpXc5/DyxwpxEgIpWlodtFQkOIMoKsBBuAQ5ufyriNJqvPuQJGvbI5cagAWJB7nPwlxks7aySno75Y2ICbJHmWSUeXi4Mkie+MxYJnkzwo2TuTlVwiCD0jHgqdjtGH3z+KAFSqqJJZKUAl/6IPaUl7th5y84LvXA1Hjp9Y9rEU1DWppu9reK513erWN7iUER44de+lV8oXbdI9empMSfCjXblW72rTI1HCROi/MWCbnejZ39Rxhl0pW1GYBMUFxZmEDUx77cqLdA43wNnWzgogNpx70qUGETENHzeiLbC1795IpOAuFyygk= chilantim@micheles-mbp.rchland.ibm.com"
+    Write-Host "administrators_authorized_keys file created successfully at $KeyPath - fixing NTFS ACLs"
+    # Fix NTFS ACLs (OpenSSH will reject the key if permissions are too permissive)
+    icacls.exe $KeyPath /inheritance:r /grant "NT AUTHORITY\SYSTEM:F" /grant "BUILTIN\Administrators:F"
+    write-Host "NTFS ACLs fixed successfully for $KeyPath"
     Write-Host "Post-installation script completed successfully"
     # Shut down the machine
     Stop-Computer -Force
