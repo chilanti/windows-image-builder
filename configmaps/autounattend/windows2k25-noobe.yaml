@@ -173,7 +173,12 @@ data:
       throw "fio installation failed with exit code $($process.ExitCode)"
     }
     Remove-Item $fioInstaller -Force
-
+    # Add an inbound firewall rule for fio server
+    Write-Host "Adding inbound firewall rule for fio server"
+    if (-not (Get-NetFirewallRule -Name fio-server -ErrorAction SilentlyContinue)) {
+      New-NetFirewallRule -Name fio-server -DisplayName "fio Server" -Direction Inbound -Protocol TCP -Action Allow -LocalPort 8765
+    }
+  
     # Ensure fio runs as a background server on every startup and immediately on this boot.
     Write-Host "Setting up fio to run as a background server on every startup"
     $fioDir = "C:\Program Files (x86)\fio"
